@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">ArtSpace</string>
+    <string name="granada_cf_title">Granada Club de Fútbol</string>
+    <string name="granada_cf_subtitle">First Team</string>
+    <string name="recreativo_title">Club Recreativo Granada</string>
+    <string name="recreativo_subtitle">Second Team</string>
+</resources>
