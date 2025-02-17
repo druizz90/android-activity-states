@@ -104,7 +104,7 @@ fun Buttons(teamIndex: Int, teamsSize: Int, onStepChange: (Int) -> Unit)  {
 
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
+fun TeamsLayoutPreview() {
     StatesTheme {
         TeamsLayout()
     }
