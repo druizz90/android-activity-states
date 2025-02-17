@@ -1,0 +1,81 @@
+name: Run Tests
+
+on:
+  push:
+    branches:
+      - main
+      - feature/*
+  pull_request:
+    branches:
+      - main
+      - feature/*
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        jvm: [21, 23]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ matrix.jvm }}
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ matrix.jvm }}
+          distribution: zulu
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build with Gradle
+        run: ./gradlew build
+
+      - name: Run unit tests
+        run: ./gradlew testDebugUnitTest --rerun-tasks
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-report-${{ matrix.jvm }}
+          path: app/build/reports/tests/testDebugUnitTest/**
+
+  instrumentation-tests:
+    name: Instrumentation Tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        api-level: [30, 35]
+        device: ["Nexus 6"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Enable KVM group permissions
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run Tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: google_apis
+          arch: x86_64
+          profile: ${{ matrix.device }}
+          script: ./gradlew connectedDebugAndroidTest
+
+      - name: Upload instrumentation test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: instrumentation-test-report-api-${{ matrix.api-level }}-device-${{ matrix.device }}
+          path: app/build/reports/androidTests/connected/*
